@@ -2,6 +2,8 @@
 
 let leafletmap
 
+let map_name_labels
+
 document.addEventListener("DOMContentLoaded", () => {
     initMap()
 })
@@ -17,6 +19,15 @@ function initMap() {
         maxZoom: 7,
         noWrap: true
     }).addTo(leafletmap);
+
+    leafletmap.on("zoomend", (e) => {
+
+        if (leafletmap.getZoom() <= 2) {
+            leafletmap.removeLayer(map_name_labels)
+        } else {
+            leafletmap.addLayer(map_name_labels)
+        }
+    })
 
     console.log("fetching api data...")
 
@@ -37,6 +48,7 @@ function renderData(data) {
 
     const regions = data.regions
 
+    map_name_labels = L.layerGroup()
     for (let r in regions) {
         for (let m in regions[r].maps) {
             const map = regions[r].maps[m]
@@ -49,11 +61,13 @@ function renderData(data) {
 
             const labelCoords = unproject(leafletmap, map.label_coord)
 
-            const marker = new L.marker(labelCoords, {opacity: 0.0});
-            marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]});
-            marker.addTo(leafletmap);
+            const marker = new L.marker(labelCoords, {opacity: 0.0})
+            marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
+            marker.addTo(map_name_labels)
         }
     }
+
+    map_name_labels.addTo(leafletmap)
 }
 
 // convert points to map positions (lat/lng) that can be displayed on a map
