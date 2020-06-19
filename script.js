@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
     initMap()
 })
 
+const taskIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/B3DEEC72BBEF0C6FC6FEF835A0E275FCB1151BB7/102439.png',
+    iconSize:     [16, 16],
+});
+
 function initMap() {
 
     leafletmap = L.map('map').setView([0, 0], 4);
@@ -64,6 +69,15 @@ function renderData(data) {
             const marker = new L.marker(labelCoords, {opacity: 0.0})
             marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
             marker.addTo(map_name_labels)
+
+            for (let t in map.tasks) {
+                const task = map.tasks[t]
+
+                const taskCoords = unproject(leafletmap, task.coord)
+                const marker = new L.marker(taskCoords, {icon: taskIcon})
+                marker.bindTooltip(task.objective)
+                marker.addTo(leafletmap)
+            }
         }
     }
 
