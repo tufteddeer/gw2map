@@ -36,8 +36,8 @@ function initMap() {
 
     console.log("fetching api data...")
 
-    const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1" // TODO: use real endpoint, TODO: v2?
-    fetch("/apiresult.json")
+    const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1" //TODO: v2?
+    fetch(endpoint)
         .then(response => response.json())
         .then(data => {
             console.log("loaded data")
