@@ -24,6 +24,11 @@ const waypointIcon = L.icon({
     iconSize: [16,16],
 })
 
+const vistaIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/A2C16AF497BA3A0903A0499FFBAF531477566F10/358415.png',
+    iconSize: [16,16],
+})
+
 /**
  * a Marker is a type of thing we want to display on our map
  */
@@ -145,16 +150,26 @@ class Gw2Map {
 
             const coord = this.unproject(entry.coord)
 
-            /* the crazy people at arena.net decided it would be fun to store waypoints as points of interest with a special "type" entry
+            /* the crazy people at arena.net decided it would be fun to store waypoints or vistas as points of interest with a special "type" entry
                 instead of giving them an own category ¯\_(ツ)_/¯
                 so instead of just using the icon we have to check for this and destroy our wonderful method of adding stuff
                 to the map in a generic way
              */
-            const icon = (entry.hasOwnProperty("type") && entry.type === "waypoint") ? waypointIcon : markerType.icon
+            let icon = markerType.icon;
+
+            if (markerType.type === "points_of_interest") {
+                switch (entry.type) {
+                    case "vista":
+                        icon = vistaIcon
+                        break
+                    case "waypoint":
+                        icon = waypointIcon
+                }
+            }
 
             const marker = new L.marker(coord, {icon: icon})
 
-            if (entry.hasOwnProperty(markerType.displayField)) {
+            if (entry.hasOwnProperty(markerType.displayField) && entry[markerType.displayField] !== "") {
 
                 marker.bindTooltip(entry[markerType.displayField])
             }
