@@ -19,6 +19,7 @@ class Gw2Map {
 
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
+        this.makeTasks = this.makeTasks.bind(this)
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -58,32 +59,36 @@ class Gw2Map {
 
         for (let r in regions) {
             for (let m in regions[r].maps) {
-                const map = regions[r].maps[m]
 
-                //filter out the many story maps
-                if (map.tasks.length === 0 &&
-                    map.skill_challenges.length === 0) {
-                    continue
-                }
+                this.makeTasks(regions[r].maps[m])
 
-                const labelCoords = this.unproject(map.label_coord)
-
-                const marker = new L.marker(labelCoords, {opacity: 0.0})
-                marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
-                marker.addTo(this.map_name_labels)
-
-                for (let t in map.tasks) {
-                    const task = map.tasks[t]
-
-                    const taskCoords = this.unproject(task.coord)
-                    const marker = new L.marker(taskCoords, {icon: taskIcon})
-                    marker.bindTooltip(task.objective)
-                    marker.addTo(this.leafletMap)
-                }
             }
         }
 
         this.map_name_labels.addTo(this.leafletMap)
+    }
+
+    makeTasks (map) {
+        //filter out the many story maps
+        if (map.tasks.length === 0 &&
+            map.skill_challenges.length === 0) {
+            return
+        }
+
+        const labelCoords = this.unproject(map.label_coord)
+
+        const marker = new L.marker(labelCoords, {opacity: 0.0})
+        marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
+        marker.addTo(this.map_name_labels)
+
+        for (let t in map.tasks) {
+            const task = map.tasks[t]
+
+            const taskCoords = this.unproject(task.coord)
+            const marker = new L.marker(taskCoords, {icon: taskIcon})
+            marker.bindTooltip(task.objective)
+            marker.addTo(this.leafletMap)
+        }
     }
 
     unproject(coordinates) {
