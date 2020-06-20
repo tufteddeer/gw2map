@@ -19,6 +19,11 @@ const skillIcon = L.icon({
     iconSize: [16, 16],
 })
 
+const waypointIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/32633AF8ADEA696A1EF56D3AE32D617B10D3AC57/157353.png',
+    iconSize: [16,16],
+})
+
 /**
  * a Marker is a type of thing we want to display on our map
  */
@@ -139,7 +144,15 @@ class Gw2Map {
             const entry = data[i]
 
             const coord = this.unproject(entry.coord)
-            const marker = new L.marker(coord, {icon: markerType.icon})
+
+            /* the crazy people at arena.net decided it would be fun to store waypoints as points of interest with a special "type" entry
+                instead of giving them an own category ¯\_(ツ)_/¯
+                so instead of just using the icon we have to check for this and destroy our wonderful method of adding stuff
+                to the map in a generic way
+             */
+            const icon = (entry.hasOwnProperty("type") && entry.type === "waypoint") ? waypointIcon : markerType.icon
+
+            const marker = new L.marker(coord, {icon: icon})
 
             if (entry.hasOwnProperty(markerType.displayField)) {
 
