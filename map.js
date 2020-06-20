@@ -7,7 +7,40 @@ document.addEventListener("DOMContentLoaded", () => {
 const taskIcon = L.icon({
     iconUrl: 'https://render.guildwars2.com/file/B3DEEC72BBEF0C6FC6FEF835A0E275FCB1151BB7/102439.png',
     iconSize: [16, 16],
-});
+})
+
+const poiIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/25B230711176AB5728E86F5FC5F0BFAE48B32F6E/97461.png',
+    iconSize: [16, 16],
+})
+
+const skillIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/B4EC6BB3FDBC42557C3CAE0CAA9E57EBF9E462E3/156626.png',
+    iconSize: [16, 16],
+})
+
+/**
+ * a Marker is a type of thing we want to display on our map
+ */
+class Marker {
+    /**
+     *
+     * @param {string} type name of the json field to use (e.g. tasks)
+     * @param {L.icon} icon leaflet icon to use on the map
+     * @param {string} displayField json field used as tooltip (e.g. poi name, task description)
+     */
+    constructor(type, icon, displayField) {
+        this.type = type
+        this.icon = icon
+        this.displayField = displayField
+    }
+}
+
+const markerTypes = [
+    new Marker("tasks", taskIcon, "objective"),
+    new Marker("points_of_interest", poiIcon, "name"),
+    new Marker("skill_challenges", skillIcon, undefined),
+]
 
 class Gw2Map {
     /**@param {string}id
@@ -19,7 +52,7 @@ class Gw2Map {
 
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
-        this.makeTasks = this.makeTasks.bind(this)
+        this.addMarker = this.addMarker.bind(this)
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -52,6 +85,10 @@ class Gw2Map {
             }))
     }
 
+    /**
+     * add a bunch of interesting things like tasks and points of interest to the map
+     * @param data
+     */
     renderData (data) {
         // todo: validate input
 
@@ -59,34 +96,55 @@ class Gw2Map {
 
         for (let r in regions) {
             for (let m in regions[r].maps) {
+                const map = regions[r].maps[m]
+                // filter out the many story maps we are not interested in // todo: this also removes the big cities like lions arch
+                if (map.tasks.length === 0 &&
+                    map.skill_challenges.length === 0) {
+                    continue
+                }
 
-                this.makeTasks(regions[r].maps[m])
+                // add different types of markers to the map
+                markerTypes.forEach(type => {
+                    this.addMarker(map, type)
+                })
 
+                // display the name of the map
+                const labelCoords = this.unproject(map.label_coord)
+
+                const marker = new L.marker(labelCoords, {opacity: 0.0})
+                marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
+                marker.addTo(this.map_name_labels)
             }
         }
 
         this.map_name_labels.addTo(this.leafletMap)
     }
 
-    makeTasks (map) {
-        //filter out the many story maps
-        if (map.tasks.length === 0 &&
-            map.skill_challenges.length === 0) {
+    /**
+     * add all markers of the given type to the leaflet map
+     * @param map the json data describing the map
+     * @param {Marker} markerType the type of marker to display
+     */
+    addMarker (map, markerType) {
+
+        // check whether our data has something about our marker
+        if (!map.hasOwnProperty(markerType.type)) {
+            console.error("map does not have information for markers of type " + markerType.type)
             return
         }
 
-        const labelCoords = this.unproject(map.label_coord)
+        const data = map[markerType.type]
 
-        const marker = new L.marker(labelCoords, {opacity: 0.0})
-        marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
-        marker.addTo(this.map_name_labels)
+        for (let i in data) {
+            const entry = data[i]
 
-        for (let t in map.tasks) {
-            const task = map.tasks[t]
+            const coord = this.unproject(entry.coord)
+            const marker = new L.marker(coord, {icon: markerType.icon})
 
-            const taskCoords = this.unproject(task.coord)
-            const marker = new L.marker(taskCoords, {icon: taskIcon})
-            marker.bindTooltip(task.objective)
+            if (entry.hasOwnProperty(markerType.displayField)) {
+
+                marker.bindTooltip(entry[markerType.displayField])
+            }
             marker.addTo(this.leafletMap)
         }
     }
