@@ -64,6 +64,7 @@ class Gw2Map {
         this.unproject = this.unproject.bind(this)
         this.addMarker = this.addMarker.bind(this)
         this.displaySectors = this.displaySectors.bind(this)
+        this.updateBreadcrumps = this.updateBreadcrumps.bind(this)
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -106,8 +107,9 @@ class Gw2Map {
         const regions = data.regions
 
         for (let r in regions) {
-            for (let m in regions[r].maps) {
-                const map = regions[r].maps[m]
+            const region = regions[r]
+            for (let m in region.maps) {
+                const map = region.maps[m]
                 // filter out the many story maps we are not interested in // todo: this also removes the big cities like lions arch
                 if (map.tasks.length === 0 &&
                     map.skill_challenges.length === 0) {
@@ -119,7 +121,7 @@ class Gw2Map {
                     this.addMarker(map, type)
                 })
 
-                this.displaySectors(map.sectors)
+                this.displaySectors(region, map, map.sectors)
 
                 // display the name of the map
                 const labelCoords = this.unproject(map.label_coord)
@@ -182,13 +184,29 @@ class Gw2Map {
 
     /**
      * Add sector polygons to the map
-     * @param {sector[]}sectors
+     * @param {region} parentregion region this sector belongs to
+     * @param {map} parentmap map this sector belongs to
+     * @param {sector[]} sectors
      */
-    displaySectors (sectors) {
+    displaySectors (parentregion, parentmap, sectors) {
         sectors.forEach(sector => {
             let points = sector.bounds.map(value => this.unproject(value))
-            L.polygon(points).addTo(this.leafletMap)
+            const poly = L.polygon(points).addTo(this.leafletMap)
+
+            poly.on("click", e => {
+                this.updateBreadcrumps(parentregion, parentmap, sector)
+            })
         })
+    }
+
+    updateBreadcrumps (region, map, sector) {
+        const regionCrumb = document.getElementById("bc_region")
+        const mapCrumb = document.getElementById("bc_map")
+        const sectorCrumb = document.getElementById("bc_sector")
+
+        regionCrumb.innerText = region.name + " ▶"
+        mapCrumb.innerText = map.name + " ▶"
+        sectorCrumb.innerText = sector.name
     }
 
     unproject(coordinates) {
