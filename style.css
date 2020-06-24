@@ -1,6 +1,17 @@
 #map {
     height: 80vh;
-    width: 80vw;
+    width: 100vw;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    padding-top: 0;
+    margin-top: 0;
+    margin-left: 10px;
 }
 
 .region-label:before {
@@ -22,4 +33,13 @@
 
 #iconList {
     list-style: none;
+}
+
+#iconList > li {
+    display: inline;
+    padding-right: 5px;
+}
+
+footer {
+    margin: auto 0rem 0rem 0rem;
 }
