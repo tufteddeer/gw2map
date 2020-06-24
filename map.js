@@ -63,6 +63,7 @@ class Gw2Map {
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
         this.addMarker = this.addMarker.bind(this)
+        this.displaySectors = this.displaySectors.bind(this)
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -117,6 +118,8 @@ class Gw2Map {
                 markerTypes.forEach(type => {
                     this.addMarker(map, type)
                 })
+
+                this.displaySectors(map.sectors)
 
                 // display the name of the map
                 const labelCoords = this.unproject(map.label_coord)
@@ -175,6 +178,17 @@ class Gw2Map {
             }
             marker.addTo(this.leafletMap)
         }
+    }
+
+    /**
+     * Add sector polygons to the map
+     * @param {sector[]}sectors
+     */
+    displaySectors (sectors) {
+        sectors.forEach(sector => {
+            let points = sector.bounds.map(value => this.unproject(value))
+            L.polygon(points).addTo(this.leafletMap)
+        })
     }
 
     unproject(coordinates) {
