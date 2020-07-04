@@ -29,29 +29,6 @@ const vistaIcon = L.icon({
     iconSize: [16,16],
 })
 
-/**
- * a Marker is a type of thing we want to display on our map
- */
-class Marker {
-    /**
-     *
-     * @param {string} type name of the json field to use (e.g. tasks)
-     * @param {L.icon} icon leaflet icon to use on the map
-     * @param {string} displayField json field used as tooltip (e.g. poi name, task description)
-     */
-    constructor(type, icon, displayField) {
-        this.type = type
-        this.icon = icon
-        this.displayField = displayField
-    }
-}
-
-const markerTypes = [
-    new Marker("tasks", taskIcon, "objective"),
-    new Marker("points_of_interest", poiIcon, "name"),
-    new Marker("skill_challenges", skillIcon, undefined),
-]
-
 class Gw2Map {
     /**@param {string}id
      */
@@ -63,9 +40,6 @@ class Gw2Map {
         this.prepareData = this.prepareData.bind(this)
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
-        this.addMarker = this.addMarker.bind(this)
-        this.displaySectors = this.displaySectors.bind(this)
-        this.updateBreadcrumps = this.updateBreadcrumps.bind(this)
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -107,18 +81,24 @@ class Gw2Map {
         // todo: validate input
 
         this.tasks = []
-        let skillpoints = []
-        let waypoints = []
-        let vistas = []
-        let landmarks = []
+        this.skillpoints = []
+        this.waypoints = []
+        this.vistas = []
+        this.landmarks = []
+        this.map_names = []
 
         for (let r in regions) {
             for (let m in regions[r].maps) {
 
                 const map = regions[r].maps[m]
 
+                if (map.label_coord !== undefined) {
+                    if (map.tasks.length !== 0 || map.points_of_interest.length > 5) // todo: better filtering of story instances
+                        this.map_names.push({name: map.name, coord: map.label_coord})
+                }
+
                 this.tasks = this.tasks.concat(map.tasks)
-                skillpoints = skillpoints.concat(map.skill_challenges)
+                this.skillpoints = this.skillpoints.concat(map.skill_challenges)
 
                 /*
                     The gw2api stores different types of points of interest using the same array, but they can be differentiated by
@@ -126,148 +106,73 @@ class Gw2Map {
                  */
                 if (map.points_of_interest.length > 0) {
 
-                    waypoints = waypoints.concat(filterPointsOfInterestByType(map.points_of_interest, "waypoints"))
-                    vistas = vistas.concat(filterPointsOfInterestByType(map.points_of_interest, "vista"))
-                    landmarks = landmarks.concat(filterPointsOfInterestByType(map.points_of_interest, "landmark"))
+                    this.waypoints = this.waypoints.concat(filterPointsOfInterestByType(map.points_of_interest, "waypoint"))
+                    this.vistas = this.vistas.concat(filterPointsOfInterestByType(map.points_of_interest, "vista"))
+                    this.landmarks = this.landmarks.concat(filterPointsOfInterestByType(map.points_of_interest, "landmark"))
                 }
             }
 
         }
 
-        this.unprojectAllThings(this.tasks/*, skillpoints, waypoints, vistas, landmarks*/)
+        this.unprojectAllThings(this.tasks, this.skillpoints, this.waypoints, this.vistas, this.landmarks, this.map_names)
     }
 
     renderData() {
 
-        for(let task of this.tasks) {
+        for (let task of this.tasks) {
             const marker = new L.marker(task.coord, {icon: taskIcon})
-
-            marker.bindTooltip(task.description)
-
+            marker.bindTooltip(task.objective)
             marker.addTo(this.leafletMap)
         }
 
-    }
-
-        /*for (let i of waypoints) {
-            console.log(i)
-        }*/
-
-        /*for (let r in regions) {
-            const region = regions[r]
-            for (let m in region.maps) {
-                const map = region.maps[m]
-                // filter out the many story maps we are not interested in // todo: this also removes the big cities like lions arch
-                if (map.tasks.length === 0 &&
-                    map.skill_challenges.length === 0) {
-                    continue
-                }
-
-                // add different types of markers to the map
-                markerTypes.forEach(type => {
-                    this.addMarker(map, type)
-                })
-
-                this.displaySectors(region, map, map.sectors)
-
-                // display the name of the map
-                const labelCoords = this.unproject(map.label_coord)
-
-                const marker = new L.marker(labelCoords, {opacity: 0.0})
-                marker.bindTooltip(map.name, {permanent: true, className: "region-label", offset: [0, 0]})
-                marker.addTo(this.map_name_labels)
-            }
+        for (let landmark of this.landmarks) {
+            const marker = new L.marker(landmark.coord, {icon: poiIcon})
+            marker.bindTooltip(landmark.name)
+            marker.addTo(this.leafletMap)
         }
 
-        this.map_name_labels.addTo(this.leafletMap)*/
-    //}
-
-    /**
-     * add all markers of the given type to the leaflet map
-     * @param map the json data describing the map
-     * @param {Marker} markerType the type of marker to display
-     */
-    addMarker (map, markerType) {
-
-        // check whether our data has something about our marker
-        if (!map.hasOwnProperty(markerType.type)) {
-            console.error("map does not have information for markers of type " + markerType.type)
-            return
+        for (let skill of this.skillpoints) {
+            const marker = new L.marker(skill.coord, {icon: skillIcon})
+            marker.bindTooltip("Heropoint")
+            marker.addTo(this.leafletMap)
         }
 
-        const data = map[markerType.type]
+        for (let wp of this.waypoints) {
+            const marker = new L.marker(wp.coord, {icon: waypointIcon})
+            marker.bindTooltip(wp.name)
+            marker.addTo(this.leafletMap)
+        }
 
-        for (let i in data) {
-            const entry = data[i]
+        for (let vista of this.vistas) {
+            const marker = new L.marker(vista.coord, {icon: vistaIcon})
+            marker.bindTooltip("Vista")
+            marker.addTo(this.leafletMap)
+        }
 
-            const coord = this.unproject(entry.coord)
-
-            /* the crazy people at arena.net decided it would be fun to store waypoints or vistas as points of interest with a special "type" entry
-                instead of giving them an own category ¯\_(ツ)_/¯
-                so instead of just using the icon we have to check for this and destroy our wonderful method of adding stuff
-                to the map in a generic way
-             */
-            let icon = markerType.icon;
-
-            if (markerType.type === "points_of_interest") {
-                switch (entry.type) {
-                    case "vista":
-                        icon = vistaIcon
-                        break
-                    case "waypoint":
-                        icon = waypointIcon
-                }
-            }
-
-            const marker = new L.marker(coord, {icon: icon})
-
-            if (entry.hasOwnProperty(markerType.displayField) && entry[markerType.displayField] !== "") {
-
-                marker.bindTooltip(entry[markerType.displayField])
-            }
+        for (let mapLabel of this.map_names) {
+            const marker = new L.marker(mapLabel.coord, {opacity: 0.0})
+            marker.bindTooltip(mapLabel.name, {permanent: true, className: "region-label", offset: [0, 0]})
             marker.addTo(this.leafletMap)
         }
     }
 
     /**
-     * Add sector polygons to the map
-     * @param {region} parentregion region this sector belongs to
-     * @param {map} parentmap map this sector belongs to
-     * @param {sector[]} sectors
+     * convert coordinates to lat/lng
+     * @param {[]} coordinates
+     * @returns the unprojected coords
      */
-    displaySectors (parentregion, parentmap, sectors) {
-        sectors.forEach(sector => {
-            let points = sector.bounds.map(value => this.unproject(value))
-            const poly = L.polygon(points).addTo(this.leafletMap)
-
-            poly.on("click", e => {
-                this.updateBreadcrumps(parentregion, parentmap, sector)
-            })
-        })
-    }
-
-    updateBreadcrumps (region, map, sector) {
-        const regionCrumb = document.getElementById("bc_region")
-        const mapCrumb = document.getElementById("bc_map")
-        const sectorCrumb = document.getElementById("bc_sector")
-
-        regionCrumb.innerText = region.name + " ▶"
-        mapCrumb.innerText = map.name + " ▶"
-        sectorCrumb.innerText = sector.name
-    }
-
     unproject(coordinates) {
         return this.leafletMap.unproject(coordinates, this.leafletMap.getMaxZoom())
     }
 
     /**
-     *
+     * unproject the coordinates of every object in the given array(s)
+     * @param groups one or more array with objects that have coordinates
      */
     unprojectAllThings(...groups) {
 
         for (let group of groups) {
             for (let thing of group) {
-                console.log(thing.coord)
                 thing.coord = this.unproject(thing.coord)
             }
         }
