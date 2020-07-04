@@ -44,6 +44,7 @@ class Gw2Map {
         this.addToggleEvents = this.addToggleEvents.bind(this)
         this.newMarker = this.newMarker.bind(this)
         this.addLayer = this.addLayer.bind(this)
+        this.displayStats = this.displayStats.bind(this)
 
         this.markerLayers = new Map()
 
@@ -176,8 +177,18 @@ class Gw2Map {
             marker.addTo(this.map_name_labels)
         }
         this.map_name_labels.addTo(this.leafletMap)
+
+        this.displayStats();
     }
 
+    displayStats() {
+        document.querySelector("#tasks > .stats").innerText = ` (${this.tasks.length})`
+        document.querySelector("#poi > .stats").innerText = ` (${this.landmarks.length})`
+        document.querySelector("#skills > .stats").innerText = ` (${this.skillpoints.length})`
+        document.querySelector("#waypoints > .stats").innerText = ` (${this.waypoints.length})`
+        document.querySelector("#vistas > .stats").innerText = ` (${this.vistas.length})`
+
+    }
     /**
      * create a new layer that can be enabled or disabled
      * @param name
