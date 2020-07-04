@@ -60,6 +60,7 @@ class Gw2Map {
         this.leafletMap = L.map(id).setView([0, 0], 4)
         this.map_name_labels = L.layerGroup()
 
+        this.prepareData = this.prepareData.bind(this)
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
         this.addMarker = this.addMarker.bind(this)
@@ -86,11 +87,12 @@ class Gw2Map {
         console.log("fetching api data...")
 
         const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
-        fetch(endpoint)
+        fetch("/apiresult.json")
             .then(response => response.json())
             .then(data => {
                 console.log("loaded data")
-                this.renderData(data)
+                this.prepareData(data)
+                this.renderData()
             })
             .catch((error => {
                 console.error(error)
@@ -98,15 +100,60 @@ class Gw2Map {
     }
 
     /**
-     * add a bunch of interesting things like tasks and points of interest to the map
+     * extract the things we want to display later
      * @param data
      */
-    renderData (data) {
+    prepareData ({regions}) {
         // todo: validate input
 
-        const regions = data.regions
+        this.tasks = []
+        let skillpoints = []
+        let waypoints = []
+        let vistas = []
+        let landmarks = []
 
         for (let r in regions) {
+            for (let m in regions[r].maps) {
+
+                const map = regions[r].maps[m]
+
+                this.tasks = this.tasks.concat(map.tasks)
+                skillpoints = skillpoints.concat(map.skill_challenges)
+
+                /*
+                    The gw2api stores different types of points of interest using the same array, but they can be differentiated by
+                    their "type" attribute. This oddity is the reason that filtering the data is not as straightforward as it could be
+                 */
+                if (map.points_of_interest.length > 0) {
+
+                    waypoints = waypoints.concat(filterPointsOfInterestByType(map.points_of_interest, "waypoints"))
+                    vistas = vistas.concat(filterPointsOfInterestByType(map.points_of_interest, "vista"))
+                    landmarks = landmarks.concat(filterPointsOfInterestByType(map.points_of_interest, "landmark"))
+                }
+            }
+
+        }
+
+        this.unprojectAllThings(this.tasks/*, skillpoints, waypoints, vistas, landmarks*/)
+    }
+
+    renderData() {
+
+        for(let task of this.tasks) {
+            const marker = new L.marker(task.coord, {icon: taskIcon})
+
+            marker.bindTooltip(task.description)
+
+            marker.addTo(this.leafletMap)
+        }
+
+    }
+
+        /*for (let i of waypoints) {
+            console.log(i)
+        }*/
+
+        /*for (let r in regions) {
             const region = regions[r]
             for (let m in region.maps) {
                 const map = region.maps[m]
@@ -132,8 +179,8 @@ class Gw2Map {
             }
         }
 
-        this.map_name_labels.addTo(this.leafletMap)
-    }
+        this.map_name_labels.addTo(this.leafletMap)*/
+    //}
 
     /**
      * add all markers of the given type to the leaflet map
@@ -211,5 +258,36 @@ class Gw2Map {
 
     unproject(coordinates) {
         return this.leafletMap.unproject(coordinates, this.leafletMap.getMaxZoom())
+    }
+
+    /**
+     *
+     */
+    unprojectAllThings(...groups) {
+
+        for (let group of groups) {
+            for (let thing of group) {
+                console.log(thing.coord)
+                thing.coord = this.unproject(thing.coord)
+            }
+        }
+    }
+}
+
+/**
+ * create a subset of points of interest by type
+ * @param {PoinOfInterest[]} list of points of interests
+ * @param {String} typeName
+ * @returns {PointOfInterest[]} Every poi witch type is typeName. Empty array if there is none
+ */
+function filterPointsOfInterestByType(poi, typeName) {
+    const  points = poi.filter(p => {
+        return p.type === typeName
+    })
+
+    if (points) {
+        return points
+    } else {
+        return []
     }
 }
