@@ -40,6 +40,12 @@ class Gw2Map {
         this.prepareData = this.prepareData.bind(this)
         this.renderData = this.renderData.bind(this)
         this.unproject = this.unproject.bind(this)
+        this.toggleLayer = this.toggleLayer.bind(this)
+        this.addToggleEvents = this.addToggleEvents.bind(this)
+        this.newMarker = this.newMarker.bind(this)
+        this.addLayer = this.addLayer.bind(this)
+
+        this.markerLayers = new Map()
 
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
@@ -71,6 +77,25 @@ class Gw2Map {
             .catch((error => {
                 console.error(error)
             }))
+
+        this.addToggleEvents()
+    }
+
+    addToggleEvents() {
+        const elements = document.querySelectorAll(".layerToggle")
+
+        elements.forEach(e => {
+            console.log(e)
+            e.addEventListener("click", event => {
+                const active = this.toggleLayer(e.id)
+
+                if (active) {
+                    e.classList.add("selected")
+                } else {
+                    e.classList.remove("selected")
+                }
+            })
+        })
     }
 
     /**
@@ -119,41 +144,78 @@ class Gw2Map {
 
     renderData() {
 
+
+        const taskLayer = this.addLayer("tasks")
         for (let task of this.tasks) {
-            const marker = new L.marker(task.coord, {icon: taskIcon})
-            marker.bindTooltip(task.objective)
-            marker.addTo(this.leafletMap)
+            taskLayer.addLayer(this.newMarker(task.coord, taskIcon, task.objective))
         }
 
+        const landmarkLayer = this.addLayer("poi")
         for (let landmark of this.landmarks) {
-            const marker = new L.marker(landmark.coord, {icon: poiIcon})
-            marker.bindTooltip(landmark.name)
-            marker.addTo(this.leafletMap)
+            landmarkLayer.addLayer(this.newMarker(landmark.coord, poiIcon, landmark.name))
         }
 
+        const skillLayer = this.addLayer("skills")
         for (let skill of this.skillpoints) {
-            const marker = new L.marker(skill.coord, {icon: skillIcon})
-            marker.bindTooltip("Heropoint")
-            marker.addTo(this.leafletMap)
+            skillLayer.addLayer(this.newMarker(skill.coord, skillIcon, "Heropoint"))
         }
 
+        const wpLayer = this.addLayer("waypoints")
         for (let wp of this.waypoints) {
-            const marker = new L.marker(wp.coord, {icon: waypointIcon})
-            marker.bindTooltip(wp.name)
-            marker.addTo(this.leafletMap)
+            wpLayer.addLayer(this.newMarker(wp.coord, waypointIcon, wp.name))
         }
 
+        const vistaLayer = this.addLayer("vistas")
         for (let vista of this.vistas) {
-            const marker = new L.marker(vista.coord, {icon: vistaIcon})
-            marker.bindTooltip("Vista")
-            marker.addTo(this.leafletMap)
+            vistaLayer.addLayer(this.newMarker(vista.coord, vistaIcon, "Vista"))
         }
 
         for (let mapLabel of this.map_names) {
             const marker = new L.marker(mapLabel.coord, {opacity: 0.0})
             marker.bindTooltip(mapLabel.name, {permanent: true, className: "region-label", offset: [0, 0]})
-            marker.addTo(this.leafletMap)
+            marker.addTo(this.map_name_labels)
         }
+        this.map_name_labels.addTo(this.leafletMap)
+    }
+
+    /**
+     * create a new layer that can be enabled or disabled
+     * @param name
+     * @returns {L.LayerGroup}
+     */
+    addLayer (name) {
+        const layer = L.layerGroup().addTo(this.leafletMap)
+        this.markerLayers.set(name, layer)
+        return layer
+    }
+
+    /**
+     * create anew marker
+     * @param coord marker position
+     * @param icon marker icon
+     * @param text marker tooltip
+     * @returns {L.Marker}
+     */
+    newMarker (coord, icon, text) {
+        return new L.marker(coord, {icon: icon}).bindTooltip(text)
+    }
+
+    /**
+     * activate or deactivate the layer with the given name
+     * @param name the name the layer is stored as
+     * @returns {boolean} true if the layer is visible after, false if not
+     */
+    toggleLayer(name) {
+        const layer = this.markerLayers.get(name)
+        if (layer) {
+            if (this.leafletMap.hasLayer(layer)) {
+                this.leafletMap.removeLayer(layer)
+                return false
+            }
+            this.leafletMap.addLayer(layer)
+            return true
+        }
+        return false
     }
 
     /**

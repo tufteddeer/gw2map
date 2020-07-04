@@ -43,3 +43,7 @@ h1 {
 footer {
     margin: auto 0rem 0rem 0rem;
 }
+
+.selected {
+    text-decoration: underline;
+}
