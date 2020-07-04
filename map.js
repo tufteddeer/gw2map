@@ -114,6 +114,10 @@ class Gw2Map {
         this.map_names = []
 
         for (let r in regions) {
+            // Crystal Desert apparently has wrong coordinates, ignore it
+            if (r === "12") {
+                continue
+            }
             for (let m in regions[r].maps) {
 
                 const map = regions[r].maps[m]
