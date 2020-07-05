@@ -57,3 +57,21 @@ footer {
     display: inline-block;
     margin-right: 2px;
 }
+
+#customDialogTitle {
+    font-weight: bold;
+    display: block;
+}
+#createCustomMarker {
+    padding: 5px 3px 3px;
+
+}
+.customPopup {
+    width: auto;
+}
+#customNameLabel {
+    display: block;
+}
+#customNameLabel > input{
+    margin-left: 5px;
+}

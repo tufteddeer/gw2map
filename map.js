@@ -2,7 +2,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
-    fetch(endpoint)
+    fetch("/apiresult.json")
         .then(response => response.json())
         .then(data => {
             console.log("loaded data")
@@ -39,6 +39,11 @@ const vistaIcon = L.icon({
     iconSize: [16,16],
 })
 
+const customIcon = L.icon({
+    iconUrl: 'https://render.guildwars2.com/file/540BA9BB6662A5154BD13306A1AEAD6219F95361/102369.png',
+    iconSize: [20,20]
+})
+
 class Gw2Map {
     /**@param {string}id
      * @param data
@@ -57,6 +62,7 @@ class Gw2Map {
         this.addLayer = this.addLayer.bind(this)
         this.displayStats = this.displayStats.bind(this)
         this.updateBreadcrumps = this.updateBreadcrumps.bind(this)
+        this.createCustomMarkerDialog = this.createCustomMarkerDialog.bind(this)
 
         this.markerLayers = new Map()
 
@@ -76,6 +82,16 @@ class Gw2Map {
             } else {
                 this.leafletMap.addLayer(this.map_name_labels)
             }
+        })
+
+        this.leafletMap.on("click", (event) => {
+            const coord = event.latlng
+
+            L.popup({className: "customPopup"})
+                .setLatLng(coord)
+                .setContent(this.createCustomMarkerDialog(coord))
+                .openOn(this.leafletMap)
+
         })
 
         this.prepareData(data)
@@ -210,6 +226,8 @@ class Gw2Map {
             sectorLayer.addLayer(poly)
         }
 
+        const customLayer = this.addLayer("custom")
+
         this.displayStats();
     }
 
@@ -294,6 +312,42 @@ class Gw2Map {
                 thing.coord = this.unproject(thing.coord)
             }
         }
+    }
+
+    /**
+     * build controls for creating a custom marker at given coordinates
+     * @param {L.LatLng} coord
+     * @returns {HTMLDivElement}
+     */
+    createCustomMarkerDialog(coord) {
+        const dialog = document.createElement("div")
+        const title = document.createElement("span")
+        title.id = "customDialogTitle"
+        title.innerText = "Custom marker"
+
+        const position = document.createElement("span")
+        const ingamePos = this.leafletMap.project(coord)
+        position.innerText = `Ingame position: ${Math.round(ingamePos.x)}, ${Math.round(ingamePos.y)}`
+
+        const label = document.createElement("label")
+        label.innerText = "Name"
+        label.id = "customNameLabel"
+
+        const nameInput = document.createElement("input")
+        nameInput.type = "text"
+        label.append(nameInput)
+
+        const button = document.createElement("button")
+        button.id = "createCustomMarker"
+        button.innerText = "Create"
+        button.addEventListener("click", () => {
+            this.markerLayers.get("custom").addLayer(this.newMarker(coord, customIcon, nameInput.value))
+            console.log("marker")
+        })
+
+        dialog.append(title, position, label, button)
+
+        return dialog
     }
 }
 
