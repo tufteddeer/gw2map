@@ -66,6 +66,8 @@ class Gw2Map {
 
         this.markerLayers = new Map()
 
+        this.customMarkers = []
+
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
             floor: 1,
@@ -251,6 +253,7 @@ class Gw2Map {
         document.querySelector("#waypoints > .stats").innerText = ` (${this.waypoints.length})`
         document.querySelector("#vistas > .stats").innerText = ` (${this.vistas.length})`
         document.querySelector("#sectors > .stats").innerText = ` (${this.sectors.length})`
+        document.querySelector("#custom > .stats").innerText = ` (${this.customMarkers.length})`
     }
     /**
      * create a new layer that can be enabled or disabled
@@ -342,7 +345,9 @@ class Gw2Map {
         button.innerText = "Create"
         button.addEventListener("click", () => {
             this.markerLayers.get("custom").addLayer(this.newMarker(coord, customIcon, nameInput.value))
-            console.log("marker")
+
+            this.customMarkers.push({coord: coord, name: nameInput.value})
+            this.displayStats()
         })
 
         dialog.append(title, position, label, button)
