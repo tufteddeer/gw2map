@@ -2,7 +2,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
-    fetch("/apiresult.json")
+    fetch(endpoint)
         .then(response => response.json())
         .then(data => {
             console.log("loaded data")
@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch((error => {
             console.error(error)
+            document.getElementById("map").innerText = "Failed to load data"
         }))
 })
 
