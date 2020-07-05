@@ -105,7 +105,6 @@ class Gw2Map {
         const elements = document.querySelectorAll(".layerToggle")
 
         elements.forEach(e => {
-            console.log(e)
             e.addEventListener("click", event => {
                 const active = this.toggleLayer(e.id)
 
