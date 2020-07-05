@@ -66,8 +66,6 @@ class Gw2Map {
 
         this.markerLayers = new Map()
 
-        this.customMarkers = []
-
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
             floor: 1,
@@ -133,6 +131,9 @@ class Gw2Map {
         this.landmarks = []
         this.map_names = []
         this.sectors = []
+
+        const storedMarkers = window.localStorage.getItem("customMarkers")
+        this.customMarkers = storedMarkers !== null ? JSON.parse(storedMarkers) : []
 
         for (let r in regions) {
             // Crystal Desert apparently has wrong coordinates, ignore it
@@ -229,6 +230,9 @@ class Gw2Map {
         }
 
         const customLayer = this.addLayer("custom")
+        for (let marker of this.customMarkers) {
+            customLayer.addLayer(this.newMarker(marker.coord, customIcon, marker.name))
+        }
 
         this.displayStats();
     }
@@ -344,9 +348,11 @@ class Gw2Map {
         button.id = "createCustomMarker"
         button.innerText = "Create"
         button.addEventListener("click", () => {
+
             this.markerLayers.get("custom").addLayer(this.newMarker(coord, customIcon, nameInput.value))
 
             this.customMarkers.push({coord: coord, name: nameInput.value})
+            window.localStorage.setItem("customMarkers", JSON.stringify(this.customMarkers))
             this.displayStats()
         })
 
