@@ -54,7 +54,8 @@ class Gw2Map {
             floor: 1,
             minZoom: 0,
             maxZoom: 7,
-            noWrap: true
+            noWrap: true,
+            attribution: "© Map data and images: ArenaNet",
         }).addTo(this.leafletMap);
 
         this.leafletMap.on("zoomend", (e) => {
