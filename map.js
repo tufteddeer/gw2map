@@ -69,7 +69,7 @@ class Gw2Map {
         console.log("fetching api data...")
 
         const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
-        fetch("/apiresult.json")
+        fetch(endpoint)
             .then(response => response.json())
             .then(data => {
                 console.log("loaded data")
