@@ -45,6 +45,7 @@ class Gw2Map {
         this.newMarker = this.newMarker.bind(this)
         this.addLayer = this.addLayer.bind(this)
         this.displayStats = this.displayStats.bind(this)
+        this.updateBreadcrumps = this.updateBreadcrumps.bind(this)
 
         this.markerLayers = new Map()
 
@@ -100,7 +101,7 @@ class Gw2Map {
     }
 
     /**
-     * extract the things we want to display later
+     * extract the things we want to display later, transform coordinates to LatLng and add relevant metadata
      * @param data
      */
     prepareData ({regions}) {
@@ -112,6 +113,7 @@ class Gw2Map {
         this.vistas = []
         this.landmarks = []
         this.map_names = []
+        this.sectors = []
 
         for (let r in regions) {
             // Crystal Desert apparently has wrong coordinates, ignore it
@@ -130,6 +132,16 @@ class Gw2Map {
                 this.tasks = this.tasks.concat(map.tasks)
                 this.skillpoints = this.skillpoints.concat(map.skill_challenges)
 
+                // add metadata we need to display breadcrump info for selected sectors
+                const sectors = []
+                for (let sector of map.sectors) {
+                    sector.parentmap = map.name
+                    sector.parentregion = regions[r].name
+
+                    sectors.push(sector)
+                }
+                this.sectors = this.sectors.concat(sectors)
+
                 /*
                     The gw2api stores different types of points of interest using the same array, but they can be differentiated by
                     their "type" attribute. This oddity is the reason that filtering the data is not as straightforward as it could be
@@ -144,9 +156,10 @@ class Gw2Map {
 
         }
 
-        this.unprojectAllThings(this.tasks, this.skillpoints, this.waypoints, this.vistas, this.landmarks, this.map_names)
+        this.unprojectAllThings(this.tasks, this.skillpoints, this.waypoints, this.vistas, this.landmarks, this.map_names, this.sectors)
     }
 
+    /** add markers and labels to the map */
     renderData() {
 
 
@@ -182,16 +195,43 @@ class Gw2Map {
         }
         this.map_name_labels.addTo(this.leafletMap)
 
+        const sectorLayer = this.addLayer("sectors")
+        for (let sector of this.sectors) {
+
+            let points = sector.bounds.map(value => {
+                return this.unproject(value)
+            })
+
+            const poly = L.polygon(points, {fillOpacity: 0.0})
+            poly.on("click", e => {
+                this.updateBreadcrumps(sector)
+            })
+            sectorLayer.addLayer(poly)
+        }
+
         this.displayStats();
     }
 
+    /**
+     * set the Region > Map > Sector names above the map to fit the selected sector
+     * @param sector
+     */
+    updateBreadcrumps (sector) {
+        const regionCrumb = document.getElementById("bc_region")
+        const mapCrumb = document.getElementById("bc_map")
+        const sectorCrumb = document.getElementById("bc_sector")
+
+        regionCrumb.innerText = sector.parentregion + " ▶"
+        mapCrumb.innerText = sector.parentmap + " ▶"
+        sectorCrumb.innerText = sector.name
+    }
     displayStats() {
         document.querySelector("#tasks > .stats").innerText = ` (${this.tasks.length})`
         document.querySelector("#poi > .stats").innerText = ` (${this.landmarks.length})`
         document.querySelector("#skills > .stats").innerText = ` (${this.skillpoints.length})`
         document.querySelector("#waypoints > .stats").innerText = ` (${this.waypoints.length})`
         document.querySelector("#vistas > .stats").innerText = ` (${this.vistas.length})`
-
+        document.querySelector("#sectors > .stats").innerText = ` (${this.sectors.length})`
     }
     /**
      * create a new layer that can be enabled or disabled

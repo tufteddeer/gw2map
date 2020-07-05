@@ -48,3 +48,11 @@ footer {
 .selected {
     text-decoration: underline;
 }
+
+#sectorIcon {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #3388ff;
+    display: inline-block;
+    margin-right: 2px;
+}
