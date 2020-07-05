@@ -1,7 +1,17 @@
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const map = new Gw2Map("map")
+    const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
+    fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+            console.log("loaded data")
+            new Gw2Map("map", data)
+
+        })
+        .catch((error => {
+            console.error(error)
+        }))
 })
 
 const taskIcon = L.icon({
@@ -31,8 +41,9 @@ const vistaIcon = L.icon({
 
 class Gw2Map {
     /**@param {string}id
+     * @param data
      */
-    constructor (id) {
+    constructor (id, data) {
 
         this.leafletMap = L.map(id).setView([0, 0], 4)
         this.map_name_labels = L.layerGroup()
@@ -67,19 +78,8 @@ class Gw2Map {
             }
         })
 
-        console.log("fetching api data...")
-
-        const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
-        fetch(endpoint)
-            .then(response => response.json())
-            .then(data => {
-                console.log("loaded data")
-                this.prepareData(data)
-                this.renderData()
-            })
-            .catch((error => {
-                console.error(error)
-            }))
+        this.prepareData(data)
+        this.renderData()
 
         this.addToggleEvents()
     }
