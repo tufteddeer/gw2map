@@ -67,6 +67,7 @@ class Gw2Map {
 
         this.markerLayers = new Map()
 
+        this.currentTaskPoly = undefined
         L.tileLayer('https://tiles.guildwars2.com/{continent_id}/{floor}/{z}/{x}/{y}.jpg', {
             continent_id: 1,
             floor: 1,
@@ -185,7 +186,17 @@ class Gw2Map {
 
         const taskLayer = this.addLayer("tasks")
         for (let task of this.tasks) {
-            taskLayer.addLayer(this.newMarker(task.coord, taskIcon, task.objective))
+            const marker = this.newMarker(task.coord, taskIcon, task.objective)
+            marker.on("mousedown", () => {
+                const bounds = task.bounds.map(value => this.unproject(value))
+
+                if(this.currentTaskPoly)
+                    this.leafletMap.removeLayer(this.currentTaskPoly)
+
+                this.currentTaskPoly = L.polygon(bounds, {color: "yellow"}).addTo(this.leafletMap)
+
+            })
+            taskLayer.addLayer(marker)
         }
 
         const landmarkLayer = this.addLayer("poi")
