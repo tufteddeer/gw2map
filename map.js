@@ -223,7 +223,7 @@ class Gw2Map {
             })
 
             const poly = L.polygon(points, {fillOpacity: 0.0})
-            poly.on("click", e => {
+            poly.on("mouseover", e => {
                 this.updateBreadcrumps(sector)
             })
             sectorLayer.addLayer(poly)
