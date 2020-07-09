@@ -2,10 +2,12 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const endpoint = "https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1"
+    console.time("fetching data")
     fetch(endpoint)
         .then(response => response.json())
         .then(data => {
-            console.log("loaded data")
+            console.timeEnd("fetching data")
+
             new Gw2Map("map", data)
 
         })
@@ -96,6 +98,7 @@ class Gw2Map {
         })
 
         this.prepareData(data)
+
         this.renderData()
 
         this.addToggleEvents()
@@ -123,6 +126,7 @@ class Gw2Map {
      */
     prepareData ({regions}) {
         // todo: validate input
+        console.time("prepareData")
 
         this.tasks = []
         this.skillpoints = []
@@ -177,10 +181,12 @@ class Gw2Map {
         }
 
         this.unprojectAllThings(this.tasks, this.skillpoints, this.waypoints, this.vistas, this.landmarks, this.map_names, this.sectors)
+        console.timeEnd("prepareData")
     }
 
     /** add markers and labels to the map */
     renderData() {
+        console.time("renderData")
 
 
         const taskLayer = this.addLayer("tasks")
@@ -247,6 +253,7 @@ class Gw2Map {
         }
 
         this.displayStats();
+        console.timeEnd("renderData")
     }
 
     /**
