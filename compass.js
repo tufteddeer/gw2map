@@ -10,8 +10,6 @@ class Compass {
         this.width = canvas.width
         this.height = canvas.height
 
-        console.log(this.height)
-
         this.offset = 8
         this.draw = this.draw.bind(this)
         this.drawArm = this.drawArm.bind(this)
