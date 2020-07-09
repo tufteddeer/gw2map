@@ -52,7 +52,6 @@ class Gw2Map {
     constructor (id, data) {
 
         this.leafletMap = L.map(id).setView([0, 0], 4)
-        this.map_name_labels = L.layerGroup()
 
         this.prepareData = this.prepareData.bind(this)
         this.renderData = this.renderData.bind(this)
@@ -80,9 +79,9 @@ class Gw2Map {
         this.leafletMap.on("zoomend", (e) => {
 
             if (this.leafletMap.getZoom() <= 2) {
-                this.leafletMap.removeLayer(this.map_name_labels)
+                this.leafletMap.removeLayer(this.markerLayers.get("mapNames"))
             } else {
-                this.leafletMap.addLayer(this.map_name_labels)
+                this.leafletMap.addLayer(this.markerLayers.get("mapNames"))
             }
         })
 
@@ -221,12 +220,12 @@ class Gw2Map {
             vistaLayer.addLayer(this.newMarker(vista.coord, vistaIcon, "Vista"))
         }
 
+        const nameLayer = this.addLayer("mapNames")
         for (let mapLabel of this.map_names) {
             const marker = new L.marker(mapLabel.coord, {opacity: 0.0})
             marker.bindTooltip(mapLabel.name, {permanent: true, className: "region-label", offset: [0, 0]})
-            marker.addTo(this.map_name_labels)
+            marker.addTo(nameLayer)
         }
-        this.map_name_labels.addTo(this.leafletMap)
 
         const sectorLayer = this.addLayer("sectors")
         for (let sector of this.sectors) {
