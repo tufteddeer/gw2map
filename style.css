@@ -44,6 +44,7 @@ h3 {
 #iconList > li {
     display: inline;
     padding-right: 5px;
+    cursor: pointer;
 }
 
 footer {
