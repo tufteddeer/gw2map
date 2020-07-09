@@ -187,15 +187,17 @@ class Gw2Map {
         const taskLayer = this.addLayer("tasks")
         for (let task of this.tasks) {
             const marker = this.newMarker(task.coord, taskIcon, task.objective)
-            marker.on("mousedown", () => {
+            marker.on("mouseover", () => {
                 const bounds = task.bounds.map(value => this.unproject(value))
-
-                if(this.currentTaskPoly)
-                    this.leafletMap.removeLayer(this.currentTaskPoly)
 
                 this.currentTaskPoly = L.polygon(bounds, {color: "yellow"}).addTo(this.leafletMap)
 
             })
+            marker.on("mouseout", () => {
+                if(this.currentTaskPoly)
+                    this.leafletMap.removeLayer(this.currentTaskPoly)
+            })
+
             taskLayer.addLayer(marker)
         }
 
