@@ -1,0 +1,23 @@
+{
+  "name": "gw2map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "map.js",
+  "scripts": {
+    "start": "browser-sync start --server --files *.*",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tufteddeer/gw2map.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tufteddeer/gw2map/issues"
+  },
+  "homepage": "https://github.com/tufteddeer/gw2map#readme",
+  "dependencies": {
+    "browser-sync": "^2.26.12"
+  }
+}
