@@ -81,13 +81,6 @@ footer {
     margin-left: 5px;
 }
 
-#compass {
-    display: inline;
-    position: absolute;
-    right: 2px;
-    top: 2px;
-}
-
 #features {
     list-style: none;
 }
