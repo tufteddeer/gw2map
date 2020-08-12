@@ -1,0 +1,16 @@
+= GW2map
+
+https://tufteddeer.github.io/gw2map/[Visit the map]
+
+A small project I did for my web technology course.
+It fetches data from the official https://wiki.guildwars2.com/wiki/API:1/map_floor[GW2 API] and displays it on a map using https://leafletjs.com/[Leaflet].
+
+NOTE: This project is not optimized for performance, so you may experience some lags or stuttering.
+You can improve your experience by unselecting some marker categories below the map.
+
+== Stuff I used
+
+- https://wiki.guildwars2.com/wiki/API:1/map_floor[The official GW2 API] for the data
+- https://leafletjs.com/[Leaflet] for rendering the map
+- http://classless.de/[classless.css] for the eyecandy
+- https://www.browsersync.io/[Browsersync] as development server
